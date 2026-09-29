@@ -35,9 +35,10 @@ export function SiteShell({ children }: { children: ReactNode }) {
   useEffect(() => { setMenu(false); window.scrollTo({ top: 0, behavior: "instant" }); }, [pathname]);
   useEffect(() => { document.body.style.overflow = menu ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [menu]);
   function openBuy(from: string) { setPlacement(from); setStep(1); try { const stored = localStorage.getItem("book-format"); if (formats.includes(stored as Format)) setFormat(stored as Format); } catch {} setModal(true); pushEvent({ event: "retailer_modal_open", placement: from }); }
+  useEffect(() => { const handler = (event: Event) => openBuy((event as CustomEvent<string>).detail || "page"); window.addEventListener("open-retailer", handler); return () => window.removeEventListener("open-retailer", handler); }, []);
   function choose(formatChoice: Format) { setFormat(formatChoice); setStep(2); try { localStorage.setItem("book-format", formatChoice); } catch {} }
   function saveConsent(a: boolean, m: boolean) { setAnalytics(a); setMarketing(m); updateConsent(a, m); try { localStorage.setItem("cookie-consent", JSON.stringify({ analytics: a, marketing: m })); } catch {} setConsentOpen(false); }
-  const retailers = format === "Audiobook" ? [] : Object.entries(siteConfig.retailers).flatMap(([name, urls]) => { const url = urls[format.toLowerCase() as "hardcover" | "paperback" | "kindle" as keyof typeof urls]; return typeof url === "string" && url ? [{ name, url }] : []; });
+  const retailers = format === "Audiobook" ? [] : Object.entries(siteConfig.retailers).flatMap(([name, urls]) => { const url = (urls as Record<string, string>)[format.toLowerCase()]; return typeof url === "string" && url ? [{ name, url }] : []; });
   return <>
     <a className="skip-link" href="#main">Skip to content</a>
     <header className={`site-header ${scrolled || pathname !== "/" ? "is-scrolled" : ""}`}>
